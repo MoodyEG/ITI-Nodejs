@@ -44,6 +44,10 @@ server.on('request', (req, res) => {
     });
     req.on('end', () => {
       const user = JSON.parse(body);
+      if (!user.name) {
+        res.end('No name found');
+        return;
+      }
       addUser(user);
       res.end(JSON.stringify(users));
     });
@@ -72,7 +76,10 @@ server.on('request', (req, res) => {
     });
     req.on('end', () => {
       const user = JSON.parse(body);
-
+      if (!user.name) {
+        res.end('No name found\n\n' + JSON.stringify(users));
+        return;
+      }
       const index = users.findIndex((u) => u.id == id);
       if (index !== -1) {
         users[index].name = user.name;
