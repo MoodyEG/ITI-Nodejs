@@ -1,0 +1,19 @@
+{
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "nodemon": "^3.1.9"
+  },
+  "name": "day2",
+  "version": "1.0.0",
+  "main": "\"\"",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "st1": "nodemon Lab2-1.js",
+    "st2": "nodemon Lab2-2.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
