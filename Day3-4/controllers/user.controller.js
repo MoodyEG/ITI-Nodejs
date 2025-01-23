@@ -1,23 +1,30 @@
-import User from '../models/user.model.js';
 import bcrypt from 'bcrypt';
 import CryptoJS from 'crypto-js';
-import sendAppMail from './mail.service.js';
+import jwt from 'jsonwebtoken';
+import path from 'path';
+import fs from 'fs';
+import User from '../models/user.model.js';
+import sendAppMail from '../utilities/mail.service.js';
 
 class UserController {
   static async register(req, res) {
     try {
-      const { name, email, password, verifyPassword, phone, gender } = req.body;
+      const { name, email, password, phone, gender } = req.body;
+      let avatar = null;
 
-      if (!name) return res.status(422).json({ error: 'Name is required' });
-      if (!email) return res.status(422).json({ error: 'Email is required' });
-      if (!password || !verifyPassword)
-        return res.status(422).json({ error: 'Passwords are required' });
-      if (!phone) return res.status(422).json({ error: 'Phone is required' });
-      if (password !== verifyPassword)
-        return res.status(422).json({ error: 'Passwords do not match' });
-
-      if (await User.findOne({ email }))
+      if (await User.findOne({ email: email.toLowerCase() }))
         return res.status(422).json({ error: 'Email is used' });
+
+      if (req.file) {
+        const uploadName = `${Date.now()}-${req.file.originalname}`;
+        const uploadPath = path.join('uploads', uploadName);
+        avatar = uploadName;
+        fs.writeFileSync(uploadPath, req.file.buffer, (err) => {
+          if (err) {
+            res.status(500).json({ error: 'Failed to save file' });
+          }
+        });
+      }
 
       const hashedPassword = bcrypt.hashSync(
         password,
@@ -37,10 +44,11 @@ class UserController {
 
       const user = await User.create({
         name,
-        email,
+        email: email.toLowerCase(),
         password: hashedPassword,
         phone: encryptedPhone,
         gender,
+        avatar,
       });
 
       const userObj = user.toObject();
@@ -54,13 +62,9 @@ class UserController {
 
   static async login(req, res) {
     try {
-      //TODO Add jwt later
       const { email, password } = req.body;
-      if (!email) return res.status(422).json({ error: 'Email is required' });
-      if (!password)
-        return res.status(422).json({ error: 'Password is required' });
 
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email: email.toLowerCase() });
       if (!user) return res.status(404).json({ error: 'User not found' });
 
       if (!bcrypt.compareSync(password, user.password))
@@ -72,6 +76,10 @@ class UserController {
         process.env.SECRET_KEY
       ).toString(CryptoJS.enc.Utf8);
       delete userObj.password;
+
+      userObj.token = jwt.sign({ id: userObj._id }, process.env.JWT_SECRET, {
+        expiresIn: '1d',
+      });
 
       res.status(200).json(userObj);
     } catch (error) {

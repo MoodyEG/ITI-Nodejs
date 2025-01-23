@@ -7,6 +7,7 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     phone: { type: String, required: true },
     gender: { type: String, enum: ['male', 'female'], default: 'male' },
+    avatar: { type: String, default: '' },
   },
   { timestamps: true }
 );

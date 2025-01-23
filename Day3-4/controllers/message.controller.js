@@ -2,9 +2,10 @@ import Message from '../models/message.model.js';
 
 class MessageController {
   static async getAll(req, res) {
-    // TODO check for jwt
     try {
-      const messages = await Message.find().select('-sender');
+      const messages = await Message.find({
+        receiver: req.user._id,
+      });
       res.json(messages);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -13,15 +14,10 @@ class MessageController {
 
   static async addMessage(req, res) {
     try {
-      const { message, sender, receiver } = req.body;
-      if (!message)
-        return res.status(422).json({ error: 'Message is required' });
-      if (!sender) return res.status(422).json({ error: 'Sender is required' });
-      if (!receiver)
-        return res.status(422).json({ error: 'Receiver is required' });
+      const { message, receiver } = req.body;
+
       const newMessage = await Message.create({
         message,
-        sender,
         receiver,
       });
       res.json(newMessage);
@@ -32,9 +28,12 @@ class MessageController {
 
   static async deleteMessage(req, res) {
     try {
-      const id = req.params.id;
+      const messageId = req.params.id;
 
-      const deletedMessage = await Message.findByIdAndDelete(id);
+      const deletedMessage = await Message.findOneAndDelete({
+        _id: messageId,
+        receiver: req.user._id,
+      });
       if (!deletedMessage)
         return res.status(404).json({ error: 'Message not found' });
       res.json(deletedMessage);

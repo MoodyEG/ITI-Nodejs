@@ -10,7 +10,7 @@ export default async function sendAppMail(email, subject, message) {
   });
 
   const mailOptions = {
-    from: process.env.EMAIL,
+    from: 'verify@saraha.com',
     to: email,
     subject: subject,
     text: message,
